@@ -3,16 +3,16 @@ import yt_dlp
 
 # Define la lista de URLs de YouTube
 urls = [
-    'https://www.youtube.com/watch?v=VT2nuXaYnHk',
-    #'https://www.youtube.com/watch?v=p6SgjtplAAM',
-    #'https://www.youtube.com/watch?v=K0meE5pldmI',
-    #'https://www.youtube.com/watch?v=_0N4EC9Veuw',
+    #'https://www.youtube.com/watch?v=0ZgE-LjHWvI',
+    #'https://www.youtube.com/watch?v=RaMeYgSBJQ0',
+    'https://www.youtube.com/watch?v=Fy5W_ryWrCY',
+    #'https://www.youtube.com/watch?v=a0Q_5dzpqKw',
     #'https://www.youtube.com/watch?v=BVYKeTXMtzQ',
     # Añade más URLs según sea necesario
 ]
 
 # Define la carpeta de destino
-output_folder = 'videos_descarga2'
+output_folder = 'lightning'
 
 # Crea la carpeta de destino si no existe
 if not os.path.exists(output_folder):
