@@ -2,7 +2,7 @@ import os
 from moviepy.editor import VideoFileClip
 
 # Ruta a la carpeta que contiene los videos .mp4
-folder_path = './why bitcoin/'
+folder_path = './Lightning Network/'
 
 # Función para convertir .mp4 a .mp3
 def convert_mp4_to_mp3(mp4_path, mp3_path):
