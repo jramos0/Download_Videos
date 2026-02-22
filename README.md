@@ -44,6 +44,7 @@ Menu options:
 - `2` Download audio (MP3), then paste URL
 - `3` Download video and convert to audio (MP3), then paste URL
 - In option `1`, you can choose video quality: `2k`, `fullhd`, or `720p` (also accepts `1080p` and `auto`)
+- In options `1/2/3`, you can choose filename style: `clean` or `clean-date`
 
 ### 1) Download video(s) as MP4
 
@@ -60,6 +61,7 @@ python3 -m downloader video \
   --url "https://www.youtube.com/watch?v=<id1>" \
   --url "https://www.youtube.com/watch?v=<id2>" \
   --video-quality fullhd \
+  --filename-style clean-date \
   --output-dir downloads/video
 ```
 
@@ -81,6 +83,7 @@ Quality options for `video`:
 python3 -m downloader audio \
   --url "https://www.youtube.com/watch?v=<id>" \
   --quality 192 \
+  --filename-style clean \
   --output-dir downloads/audio
 ```
 
@@ -135,5 +138,7 @@ python3 -m unittest discover -s tests -p 'test_*.py' -v
 ## Notes
 
 - URL input is validated before download starts.
+- Only YouTube URLs are accepted (`youtube.com`, `youtu.be`).
 - Missing or invalid directories fail with explicit errors.
 - Conversion uses `subprocess.run(..., check=True)` for reliable process failure handling.
+- Download history is written to `downloads/history.json` with status and metadata per URL.

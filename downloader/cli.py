@@ -41,18 +41,21 @@ def build_parser() -> argparse.ArgumentParser:
         default="1080p",
         help="Video quality: auto, 2k, fullhd, 1080p, 720p.",
     )
+    video.add_argument("--filename-style", default="clean", help="Filename style: clean, clean-date.")
     video.add_argument("--verbose", action="store_true")
 
     audio = subparsers.add_parser("audio", help="Download audio as MP3.")
     _add_url_inputs(audio)
     audio.add_argument("--output-dir", type=Path, default=Path("downloads/audio"))
     audio.add_argument("--quality", type=int, default=192, choices=range(64, 321), metavar="64-320")
+    audio.add_argument("--filename-style", default="clean", help="Filename style: clean, clean-date.")
     audio.add_argument("--verbose", action="store_true")
 
     video_to_audio = subparsers.add_parser("video-to-audio", help="Download a video URL and convert to MP3.")
     _add_url_inputs(video_to_audio)
     video_to_audio.add_argument("--output-dir", type=Path, default=Path("downloads/video_to_audio"))
     video_to_audio.add_argument("--quality", type=int, default=192, choices=range(64, 321), metavar="64-320")
+    video_to_audio.add_argument("--filename-style", default="clean", help="Filename style: clean, clean-date.")
     video_to_audio.add_argument("--verbose", action="store_true")
 
     convert = subparsers.add_parser("convert", help="Convert local MP4 files to MP3.")
@@ -74,25 +77,16 @@ def _prompt(text: str, default: str | None = None) -> str:
 
 
 def _interactive_menu() -> int:
-    print("=== Download Videos - Menu ===")
-    print("1) Descargar video (MP4)")
-    print("2) Descargar audio (MP3)")
-    print("3) Convertir video URL a audio (MP3)")
-    print("0) Salir")
-
-    option = _prompt("Selecciona una opcion: ")
-    if option == "0":
-        print("Saliendo.")
-        return 0
-
-    if option not in {"1", "2", "3"}:
-        print("Opcion invalida.")
-        return 2
-
     def _video_quality_input() -> str:
         value = _prompt("Calidad de video [2k/fullhd/720p, default fullhd]: ", "fullhd").lower()
         if value not in {"2k", "fullhd", "720p", "1080p", "auto"}:
             raise ValidationError("La calidad de video debe ser: 2k, fullhd, 1080p, 720p o auto.")
+        return value
+
+    def _filename_style_input() -> str:
+        value = _prompt("Estilo nombre [clean/clean-date, default clean]: ", "clean").lower()
+        if value not in {"clean", "clean-date"}:
+            raise ValidationError("El estilo de nombre debe ser clean o clean-date.")
         return value
 
     def _quality_input(prompt_text: str) -> int:
@@ -105,28 +99,69 @@ def _interactive_menu() -> int:
             raise ValidationError("La calidad debe estar entre 64 y 320.")
         return quality
 
-    url = _prompt("Pega la URL: ")
-    urls = validate_urls([url])
+    while True:
+        print("=== Download Videos - Menu ===")
+        print("1) Descargar video (MP4)")
+        print("2) Descargar audio (MP3)")
+        print("3) Convertir video URL a audio (MP3)")
+        print("0) Salir")
 
-    if option == "1":
-        output = Path(_prompt("Carpeta de salida [downloads/video]: ", "downloads/video"))
-        video_quality = _video_quality_input()
-        result = download_video(urls=urls, output_dir=output, video_quality=video_quality, verbose=False)
-        print(f"Video download completed with exit code: {result}")
-        return 0 if result == 0 else 1
+        option = _prompt("Selecciona una opcion: ")
+        if option == "0":
+            print("Saliendo.")
+            return 0
+        if option not in {"1", "2", "3"}:
+            print("Opcion invalida.")
+            continue
 
-    if option == "2":
-        output = Path(_prompt("Carpeta de salida [downloads/audio]: ", "downloads/audio"))
-        quality = _quality_input("Calidad MP3 64-320 [192]: ")
-        result = download_audio_as_mp3(urls=urls, output_dir=output, quality_kbps=quality, verbose=False)
-        print(f"Audio download completed with exit code: {result}")
-        return 0 if result == 0 else 1
+        try:
+            url = _prompt("Pega la URL: ")
+            urls = validate_urls([url])
 
-    output = Path(_prompt("Carpeta de salida [downloads/video_to_audio]: ", "downloads/video_to_audio"))
-    quality = _quality_input("Calidad MP3 64-320 [192]: ")
-    result = download_video_to_mp3(urls=urls, output_dir=output, quality_kbps=quality, verbose=False)
-    print(f"Video-to-audio completed with exit code: {result}")
-    return 0 if result == 0 else 1
+            if option == "1":
+                output = Path(_prompt("Carpeta de salida [downloads/video]: ", "downloads/video"))
+                video_quality = _video_quality_input()
+                filename_style = _filename_style_input()
+                result = download_video(
+                    urls=urls,
+                    output_dir=output,
+                    video_quality=video_quality,
+                    verbose=False,
+                    filename_style=filename_style,
+                )
+                print(f"Video download completed with exit code: {result}")
+                continue
+
+            if option == "2":
+                output = Path(_prompt("Carpeta de salida [downloads/audio]: ", "downloads/audio"))
+                quality = _quality_input("Calidad MP3 64-320 [192]: ")
+                filename_style = _filename_style_input()
+                result = download_audio_as_mp3(
+                    urls=urls,
+                    output_dir=output,
+                    quality_kbps=quality,
+                    verbose=False,
+                    filename_style=filename_style,
+                )
+                print(f"Audio download completed with exit code: {result}")
+                continue
+
+            output = Path(_prompt("Carpeta de salida [downloads/video_to_audio]: ", "downloads/video_to_audio"))
+            quality = _quality_input("Calidad MP3 64-320 [192]: ")
+            filename_style = _filename_style_input()
+            result = download_video_to_mp3(
+                urls=urls,
+                output_dir=output,
+                quality_kbps=quality,
+                verbose=False,
+                filename_style=filename_style,
+            )
+            print(f"Video-to-audio completed with exit code: {result}")
+
+        except ValidationError as exc:
+            print(f"Input error: {exc}")
+        except Exception as exc:
+            print(f"Runtime error: {exc}")
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -144,6 +179,7 @@ def main(argv: list[str] | None = None) -> int:
                 output_dir=args.output_dir,
                 video_quality=args.video_quality,
                 verbose=args.verbose,
+                filename_style=args.filename_style,
             )
             print(f"Video download completed with exit code: {result}")
             return 0 if result == 0 else 1
@@ -155,6 +191,7 @@ def main(argv: list[str] | None = None) -> int:
                 output_dir=args.output_dir,
                 quality_kbps=args.quality,
                 verbose=args.verbose,
+                filename_style=args.filename_style,
             )
             print(f"Audio download completed with exit code: {result}")
             return 0 if result == 0 else 1
@@ -166,6 +203,7 @@ def main(argv: list[str] | None = None) -> int:
                 output_dir=args.output_dir,
                 quality_kbps=args.quality,
                 verbose=args.verbose,
+                filename_style=args.filename_style,
             )
             print(f"Video-to-audio completed with exit code: {result}")
             return 0 if result == 0 else 1
